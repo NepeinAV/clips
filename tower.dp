@@ -1,0 +1,116 @@
+TRUE
+CLIPS> 
+(watch facts)
+CLIPS> 
+(set-strategy mea)
+depth
+CLIPS> 
+(deftemplate block
+    (slot color (type SYMBOL))
+    (slot size (type INTEGER))
+    (slot place (type SYMBOL) (default heap))
+)
+CLIPS> 
+(deftemplate on
+    (slot upper (type SYMBOL))
+    (slot lower (type SYMBOL))
+    (slot place (type SYMBOL))
+)
+CLIPS> 
+(deftemplate goal
+    (field task (type SYMBOL))
+)
+CLIPS> 
+(deffacts the-facts
+    (block (color red) (size 10))
+    (block (color yellow) (size 20))
+    (block (color blue) (size 30))
+)
+CLIPS> 
+(defrule begin
+    (initial-fact)
+    =>
+    (assert (goal (task find)))
+)
+CLIPS> 
+(defrule pick-up
+    ?my-goal <- (goal (task find))
+    ?my-block <- (block (size ?S1) (place heap))
+    (not (block (color ?C2) (size ?S2&:(> ?S2 ?S1)) (place heap)))
+    =>
+    (modify ?my-block (place hand))
+    (modify ?my-goal (task build))
+)
+CLIPS> 
+(defrule place-first
+    ?my-goal <- (goal (task build))
+    ?my-block <- (block (place hand))
+    (not (block (place tower)))
+    =>
+    (modify ?my-block (place tower))
+    (modify ?my-goal (task find))
+)
+CLIPS> 
+(defrule put-down
+    ?my-goal <- (goal (task build))
+    ?my-block <- (block (color ?C0) (place hand))
+    (block (color ?C1) (place tower))
+    (not (on (upper ?C2) (lower ?C1) (place tower)))
+    =>
+    (modify ?my-block (place tower))
+    (assert (on (upper ?C0) (lower ?C1) (place tower)))
+    (modify ?my-goal (task find))
+)
+CLIPS> 
+(defrule stop
+    ?my-goal <- (goal (task find))
+    (not (block (place heap)))
+    =>
+    (retract ?my-goal)
+)
+CLIPS> 
+(reset)
+==> f-0     (initial-fact)
+==> f-1     (block (color red) (size 10) (place heap))
+==> f-2     (block (color yellow) (size 20) (place heap))
+==> f-3     (block (color blue) (size 30) (place heap))
+CLIPS> 
+(run)
+==> f-4     (goal (task find))
+<== f-3     (block (color blue) (size 30) (place heap))
+==> f-5     (block (color blue) (size 30) (place hand))
+<== f-4     (goal (task find))
+==> f-6     (goal (task build))
+<== f-5     (block (color blue) (size 30) (place hand))
+==> f-7     (block (color blue) (size 30) (place tower))
+<== f-6     (goal (task build))
+==> f-8     (goal (task find))
+<== f-2     (block (color yellow) (size 20) (place heap))
+==> f-9     (block (color yellow) (size 20) (place hand))
+<== f-8     (goal (task find))
+==> f-10    (goal (task build))
+<== f-9     (block (color yellow) (size 20) (place hand))
+==> f-11    (block (color yellow) (size 20) (place tower))
+==> f-12    (on (upper yellow) (lower blue) (place tower))
+<== f-10    (goal (task build))
+==> f-13    (goal (task find))
+<== f-1     (block (color red) (size 10) (place heap))
+==> f-14    (block (color red) (size 10) (place hand))
+<== f-13    (goal (task find))
+==> f-15    (goal (task build))
+<== f-14    (block (color red) (size 10) (place hand))
+==> f-16    (block (color red) (size 10) (place tower))
+==> f-17    (on (upper red) (lower yellow) (place tower))
+<== f-15    (goal (task build))
+==> f-18    (goal (task find))
+<== f-18    (goal (task find))
+CLIPS> (facts)
+f-0     (initial-fact)
+f-7     (block (color blue) (size 30) (place tower))
+f-11    (block (color yellow) (size 20) (place tower))
+f-12    (on (upper yellow) (lower blue) (place tower))
+f-16    (block (color red) (size 10) (place tower))
+f-17    (on (upper red) (lower yellow) (place tower))
+For a total of 6 facts.
+CLIPS> 
+(dribble-off)
