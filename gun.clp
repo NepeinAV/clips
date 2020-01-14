@@ -1,6 +1,6 @@
-(dribble-on "gun.dp")
-(watch facts)
-(watch instances)
+;; (dribble-on "gun.dp")
+(watch)
+;; (watch instances)
 
 (defclass pistol
     (is-a USER)
@@ -144,5 +144,5 @@
 
 ;; (facts)
 
-(dribble-off)
+;; (dribble-off)
 (exit)

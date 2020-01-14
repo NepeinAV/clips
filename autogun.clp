@@ -1,7 +1,8 @@
-TRUE
-CLIPS> (watch facts)
-CLIPS> (watch instances)
-CLIPS> 
+;; (watch all)
+(watch facts)
+(watch instances)
+(watch activations)
+
 (defclass pistol
     (is-a USER)
     (role concrete)
@@ -13,60 +14,57 @@ CLIPS>
     (slot magazine (type SYMBOL) (create-accessor read-write))
     (slot rounds (type INTEGER) (create-accessor read-write))
 )
-CLIPS> 
+
 (defmessage-handler pistol clear () 
     (dynamic-put chamber 0)
-    (ppinstance)
+    ;; (ppinstance)
 )
-CLIPS> 
+
 (defmessage-handler pistol safety (?on-off)
     (dynamic-put safety ?on-off)
     (if (eq ?on-off on) then
         (dynamic-put hammer down)
     )
 )
-CLIPS> 
+
 (defmessage-handler pistol drop ()
     (dynamic-put magazine out)
 )
-CLIPS> 
+
 (defmessage-handler pistol seat ()
     (dynamic-put magazine in)
 )
-CLIPS> 
+
 (defmessage-handler pistol rack ()
     (if (> (dynamic-get rounds) 0) then 
         (dynamic-put chamber 1)
         (dynamic-put rounds (- (dynamic-get rounds) 1))
         (dynamic-put slide forward)
+        (return TRUE)
     else
-        (dynamic-put chamber 0)
         (dynamic-put slide back)
+        (return FALSE)
     )
 )
-CLIPS> 
+
 (defmessage-handler pistol fire ()
-    if (and (eq (dynamic-get chamber) 1) (eq (dynamic-get safety) off)) then
-        (printout t "BANG!" crlf)
-        TRUE
-    else
-        (printout t "click" crlf)
-        FALSE
+    (printout t "BANG!" crlf)
+    (send [PPK] clear)
 )
-CLIPS> 
-(definstances pistols (PPK of pistol (safety on) (slide forward) (hammer down) (chamber 0) (magazine out) (rounds 6)))
-CLIPS> 
+
+(definstances pistols (PPK of pistol (safety on) (slide forward) (hammer down) (chamber 0) (magazine out) (rounds 5)))
+
 (deftemplate range-test
     (slot check (type SYMBOL) (default no))
     (slot fired (type SYMBOL) (default no))
 )
-CLIPS> 
+
 (defrule start
     (initial-fact)
     =>
     (assert (range-test))
 )
-CLIPS> 
+
 (defrule check
     (object (name [PPK]) (safety on) (magazine out))
     ?T <- (range-test (check no))
@@ -74,89 +72,75 @@ CLIPS>
     (send [PPK] clear)
     (modify ?T (check yes))
 )
-CLIPS> 
+
 (defrule correct1
     (object (name [PPK]) (safety off))
     (range-test (check no))
     =>
     (send [PPK] safety on)
 )
-CLIPS> 
+
 (defrule correct2
     (object (name [PPK]) (safety on) (magazine in))
     (range-test (check no))
     =>
     (send [PPK] drop)
 )
-CLIPS> 
+
 (defrule mag-in
     (object (name [PPK]) (safety on) (magazine out))
     (range-test (fired no) (check yes))
     =>
     (send [PPK] seat)
 )
-CLIPS> 
+
 (defrule load
+    ?T <- (range-test (fired no))
     (object (name [PPK]) (magazine in) (chamber 0))
     =>
-    (send [PPK] rack)
-)
-CLIPS> 
-(defrule ready
-    (object (name [PPK]) (chamber 1))
-    =>
-    (send [PPK] safety off)
-)
-CLIPS> 
-(defrule fire
-    (object (name [PPK]) (safety off))
-    ?T <- (range-test (fired no))
-    =>
-    (if (eq (send [PPK] fire) TRUE) then
+    (if (eq (send [PPK] rack) FALSE) then
+        (printout t "click" crlf)
         (modify ?T (fired yes))
     )
 )
-CLIPS> 
+
+(defrule ready
+    (range-test (fired no))
+    (object (name [PPK]) (chamber 1) (safety on))
+    =>
+    (send [PPK] safety off)
+)
+
+(defrule fire
+    (object (name [PPK]) (safety off) (chamber 1))
+    ?T <- (range-test (fired no))
+    =>
+    (send [PPK] fire)
+)
+
 (defrule unready
-    (object (name [PPK]) (safety off))
     (range-test (fired yes))
+    (object (name [PPK]) (safety off))
     =>
     (send [PPK] safety on)
 )
-CLIPS> 
+
 (defrule stop
     (object (name [PPK]) (safety on))
     (range-test (fired yes))
     =>
     (send [PPK] drop)
 )
-CLIPS> 
+
 (defrule unload
     (object (name [PPK]) (safety on) (magazine out))
     (range-test (fired yes))
     =>
     (send [PPK] clear)
 )
-CLIPS> 
-(reset)
-==> instance [initial-object] of INITIAL-OBJECT
-==> instance [PPK] of pistol
-==> f-0     (initial-fact)
-CLIPS> 
-(run)
-==> f-1     (range-test (check no) (fired no))
-[PPK] of pistol
-(safety on)
-(slide forward)
-(hammer down)
-(chamber 0)
-(magazine out)
-(rounds 6)
-<== f-1     (range-test (check no) (fired no))
-==> f-2     (range-test (check yes) (fired no))
-BANG!
-click
-CLIPS> 
-;; (facts)
 
-(dribble-off)
+(reset)
+
+(run)
+
+(exit)
