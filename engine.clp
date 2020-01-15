@@ -190,5 +190,5 @@
     (format t "%s%n%n%n" ?item)
 )
 
-(reset)
-(run)
+; (reset)
+; (run)
