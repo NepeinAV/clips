@@ -1,32 +1,3 @@
-working-state engine normal
-working-state engine unsatisfactory
-working-state engine does-not-start
-
-rotation-state engine rotates
-rotation-state engine does-not-rotate
-
-spark-state engine normal
-spark-state engine irregular-spark
-spark-state engine does-not-spark
-
-charge-state battery charged
-charge-state battery dead
-
-symptom engine low-output
-symptom engine not-low-output
-
-repair "Add gas"
-repair "Charge the battery"
-repair "Replace the points"
-repair "Clean the points"
-repair "Replace the ignition coil"
-repair "Repair the ditributor lead wire"
-repair "Clean the fuel line"
-repair "Point gap adjustment"
-repair "Timing adjustment"
-repair "No repair needed"
-repair "Take your car to a mechanic"
-
 (deffunction ask-question (?question $?allowed-values)
     (printout t ?question)
     (bind ?answer (read))
